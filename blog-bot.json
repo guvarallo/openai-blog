@@ -1,0 +1,275 @@
+{
+  "description": "A New Flow",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "next": "gather-message",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "incomingCall"
+        },
+        {
+          "event": "incomingConversationMessage"
+        },
+        {
+          "event": "incomingRequest"
+        },
+        {
+          "event": "incomingParent"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "name": "gather-message",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "fetch-sentiment",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 190,
+          "y": 200
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "Welcome to Twilio's chatbot! Please tell me how I can help you today?",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "fetch-sentiment",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "sentiment-split",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZS38c20df1bcbc0041a2bdcf9101e25d5f",
+        "environment_sid": "ZE715fe736924bf49c82de8ffe86f6663d",
+        "offset": {
+          "x": 190,
+          "y": 460
+        },
+        "function_sid": "ZH53ab33e9aff0369d0136c8fdd2c72517",
+        "parameters": [
+          {
+            "value": "{{widgets.gather-message.inbound.Body}}",
+            "key": "message"
+          },
+          {
+            "value": "You will be provided with a message, and your task is to classify its sentiment in one word: Positive, neutral or negative.",
+            "key": "systemContent"
+          }
+        ],
+        "url": "https://serverless-openai-2631-dev.twil.io/openai"
+      }
+    },
+    {
+      "name": "sentiment-split",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "positive",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to Positive",
+              "arguments": ["{{widgets.fetch-sentiment.parsed.content}}"],
+              "type": "equal_to",
+              "value": "Positive"
+            }
+          ]
+        },
+        {
+          "next": "neutral",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to Neutral",
+              "arguments": ["{{widgets.fetch-sentiment.parsed.content}}"],
+              "type": "equal_to",
+              "value": "Neutral"
+            }
+          ]
+        },
+        {
+          "next": "negative",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to Negative",
+              "arguments": ["{{widgets.fetch-sentiment.parsed.content}}"],
+              "type": "equal_to",
+              "value": "Negative"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.fetch-sentiment.parsed.content}}",
+        "offset": {
+          "x": 20,
+          "y": 690
+        }
+      }
+    },
+    {
+      "name": "negative",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 570,
+          "y": 960
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "I'm sorry to hear this, I will transfer you right away to your exclusive agent, one moment please."
+      }
+    },
+    {
+      "name": "positive",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -150,
+          "y": 960
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Thank you for your positive message! Have a great day and I look forward to talking to you next time!"
+      }
+    },
+    {
+      "name": "fetch-content",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "ai-content",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZS38c20df1bcbc0041a2bdcf9101e25d5f",
+        "environment_sid": "ZE715fe736924bf49c82de8ffe86f6663d",
+        "offset": {
+          "x": 200,
+          "y": 1200
+        },
+        "function_sid": "ZH53ab33e9aff0369d0136c8fdd2c72517",
+        "parameters": [
+          {
+            "value": "{{widgets.gather-message.inbound.Body}}",
+            "key": "message"
+          },
+          {
+            "value": "Summarize for me in one paragraph.",
+            "key": "systemContent"
+          }
+        ],
+        "url": "https://serverless-openai-2631-dev.twil.io/openai"
+      }
+    },
+    {
+      "name": "ai-content",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 200,
+          "y": 1430
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "{{widgets.fetch-content.parsed.content}}"
+      }
+    },
+    {
+      "name": "neutral",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "fetch-content",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 210,
+          "y": 960
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Got it, let me search about this for you, one moment please."
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}
