@@ -52,7 +52,7 @@
         "service": "{{trigger.message.InstanceSid}}",
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
-        "body": "Welcome to Twilio's chatbot! Please tell me how I can help you today?",
+        "body": "Welcome to Twilio's Intelligent Chat! Please type for me how I can help you today?",
         "timeout": "3600"
       }
     },
@@ -264,7 +264,7 @@
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "Got it, let me search about this for you, one moment please."
+        "body": "Let me search about this for you, one moment please."
       }
     }
   ],
