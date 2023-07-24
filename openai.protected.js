@@ -3,12 +3,12 @@ const { Configuration, OpenAIApi } = require('openai')
 exports.handler = async function (context, event, callback) {
   const apiKey = context.OPEN_AI_KEY
   const configuration = new Configuration({ apiKey })
-  const openai = new OpenAIApi(configuration)
+  const openAI = new OpenAIApi(configuration)
 
   const { message, systemContent } = event
 
   const executeAI = async () => {
-    const completion = await openai.createChatCompletion({
+    const completion = await openAI.createChatCompletion({
       model: 'gpt-3.5-turbo-16k',
       messages: [
         { role: 'system', content: systemContent },
